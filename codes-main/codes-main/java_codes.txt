@@ -1,0 +1,882 @@
+//AdminLoginActivity
+
+package com.example.mygame;
+
+public class AdminLoginActivity extends androidx.appcompat.app.AppCompatActivity {
+    private static final java.lang.String ADMIN_USER = "admin";
+    private static final java.lang.String ADMIN_PASS = "DFGIcyberaware";
+    android.widget.EditText username;
+    android.widget.EditText password;
+    android.widget.Button loginButton;
+
+    public AdminLoginActivity() { /* compiled code */ }
+
+    protected void onCreate(android.os.Bundle savedInstanceState) { /* compiled code */ }
+}
+
+
+
+//AdminPanelActivity
+
+
+
+package com.example.mygame;
+
+public class AdminPanelActivity extends androidx.appcompat.app.AppCompatActivity {
+    android.widget.Spinner fileSpinner;
+    android.widget.EditText contentEditText;
+    android.widget.Button loadButton;
+    android.widget.Button saveButton;
+    java.lang.String selectedFile;
+    private static final java.lang.String[] FILES;
+    java.util.Set<java.lang.String> allowedFiles;
+
+    public AdminPanelActivity() { /* compiled code */ }
+
+    protected void onCreate(android.os.Bundle savedInstanceState) { /* compiled code */ }
+
+    private boolean isAllowed(java.lang.String file) { /* compiled code */ }
+
+    private void loadFile() { /* compiled code */ }
+
+    private void saveFile() { /* compiled code */ }
+}
+
+
+//AssessmentActivity
+
+package com.example.mygame;
+
+public class AssessmentActivity extends androidx.appcompat.app.AppCompatActivity {
+    private android.widget.TextView questionText;
+    private android.widget.TextView textPercentage;
+    private android.widget.Button option1;
+    private android.widget.Button option2;
+    private android.widget.Button option3;
+    private android.widget.Button option4;
+    private android.widget.Button startGameBtn;
+    private android.widget.ImageView questionImage;
+    private android.widget.ProgressBar progressCircle;
+    private nl.dionsegijn.konfetti.xml.KonfettiView konfettiView;
+    private final java.util.List<com.example.mygame.Question> questionList;
+    private int currentQuestionIndex;
+    private int score;
+    private java.lang.String userLevel;
+
+    public AssessmentActivity() { /* compiled code */ }
+
+    protected void onCreate(android.os.Bundle savedInstanceState) { /* compiled code */ }
+
+    private java.lang.String getQuestionsFile() { /* compiled code */ }
+
+    private void loadQuestions() { /* compiled code */ }
+
+    private void showQuestion() { /* compiled code */ }
+
+    private void checkAnswer(int selectedIndex) { /* compiled code */ }
+
+    private void finishQuiz() { /* compiled code */ }
+}
+
+
+//AssessmentIntroActivity
+
+
+package com.example.mygame;
+
+public class AssessmentIntroActivity extends androidx.appcompat.app.AppCompatActivity {
+    android.widget.Button startBtn;
+    android.widget.TextView welcomeText;
+    android.widget.TextView infoText;
+
+    public AssessmentIntroActivity() { /* compiled code */ }
+
+    protected void onCreate(android.os.Bundle savedInstanceState) { /* compiled code */ }
+}
+
+
+
+//DatabaseHelper
+
+
+package com.example.mygame;
+
+public class DatabaseHelper extends android.database.sqlite.SQLiteOpenHelper {
+    private static final java.lang.String DATABASE_NAME = "mygame.db";
+    private static final int DATABASE_VERSION = 1;
+    private static final java.lang.String TABLE_USERS = "users";
+    private static final java.lang.String COL_ID = "id";
+    private static final java.lang.String COL_USERNAME = "username";
+    private static final java.lang.String COL_PASSWORD = "password";
+
+    public DatabaseHelper(android.content.Context context) { /* compiled code */ }
+
+    public void onCreate(android.database.sqlite.SQLiteDatabase db) { /* compiled code */ }
+
+    public void onUpgrade(android.database.sqlite.SQLiteDatabase db, int oldVersion, int newVersion) { /* compiled code */ }
+
+    public boolean registerUser(java.lang.String username, java.lang.String password) { /* compiled code */ }
+
+    public boolean loginUser(java.lang.String username, java.lang.String password) { /* compiled code */ }
+
+    public boolean userExists(java.lang.String username) { /* compiled code */ }
+}
+
+
+//GameActivity
+
+package com.example.mygame;
+
+import android.app.AlertDialog;
+import android.content.Intent;
+import android.os.Bundle;
+import android.os.CountDownTimer;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.TextView;
+import androidx.appcompat.app.AppCompatActivity;
+import com.example.mygame.R.id;
+import com.example.mygame.R.layout;
+import com.example.mygame.R.string;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+public class GameActivity extends AppCompatActivity {
+    private TextView questionText;
+    private TextView timerText;
+    private Button option1;
+    private Button option2;
+    private Button option3;
+    private Button option4;
+    private ImageView questionImage;
+    private final List<GameQuestion> allQuestions = new ArrayList();
+    private final List<GameQuestion> filteredQuestions = new ArrayList();
+    private final List<GameQuestion> selectedQuestions = new ArrayList();
+    private int currentQuestionIndex = 0;
+    private int correctCount = 0;
+    private int wrongCount = 0;
+    private String currentLevel = "BEGINNER";
+    private CountDownTimer countDownTimer;
+    private static final long QUESTION_TIME_MS = 25000L;
+
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        this.setContentView(layout.activity_game);
+        this.questionText = (TextView)this.findViewById(id.levelText);
+        this.questionImage = (ImageView)this.findViewById(id.questionImage);
+        this.timerText = (TextView)this.findViewById(id.timerText);
+        this.option1 = (Button)this.findViewById(id.option1);
+        this.option2 = (Button)this.findViewById(id.option2);
+        this.option3 = (Button)this.findViewById(id.option3);
+        this.option4 = (Button)this.findViewById(id.option4);
+        this.currentLevel = this.getIntent().getStringExtra("level");
+        if (this.currentLevel == null) {
+            this.currentLevel = "BEGINNER";
+        }
+
+        this.loadQuestions();
+        this.prepareQuestionsForCurrentLevel();
+        this.option1.setOnClickListener((v) -> this.handleAnswerClick(0));
+        this.option2.setOnClickListener((v) -> this.handleAnswerClick(1));
+        this.option3.setOnClickListener((v) -> this.handleAnswerClick(2));
+        this.option4.setOnClickListener((v) -> this.handleAnswerClick(3));
+        this.showQuestion();
+    }
+
+    private String getGameQuestionsFile() {
+        String lang = this.getSharedPreferences("Settings", 0).getString("lang", "en");
+        return lang.equals("ar") ? "game_questions_ar.txt" : "game_questions.txt";
+    }
+
+    private void loadQuestions() {
+        this.allQuestions.clear();
+
+        try {
+            File file = new File(this.getFilesDir(), this.getGameQuestionsFile());
+            BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
+            StringBuilder builder = new StringBuilder();
+
+            String line;
+            while((line = reader.readLine()) != null) {
+                builder.append(line).append("\n");
+            }
+
+            reader.close();
+            String data = builder.toString();
+            String[] lines = data.split("\n");
+            int j = 0;
+
+            while(j < lines.length) {
+                if (lines[j].trim().isEmpty()) {
+                    ++j;
+                } else if (!lines[j].trim().startsWith("LEVEL:")) {
+                    ++j;
+                } else {
+                    String level = lines[j++].replace("LEVEL:", "").trim();
+                    String type = lines[j++].replace("TYPE:", "").trim();
+                    String question = lines[j++].trim();
+                    String[] options = lines[j++].trim().split(",");
+                    String answerLine = lines[j++].trim();
+                    List<Integer> answers = new ArrayList();
+
+                    for(String s : answerLine.split(",")) {
+                        try {
+                            answers.add(Integer.parseInt(s.trim()));
+                        } catch (Exception var19) {
+                        }
+                    }
+
+                    int imageResId = 0;
+                    if (j < lines.length) {
+                        String nextLine = lines[j].trim();
+                        if (!nextLine.isEmpty() && !nextLine.startsWith("LEVEL:") && !nextLine.startsWith("TYPE:") && !nextLine.toLowerCase().startsWith("note")) {
+                            if (!nextLine.equals("0")) {
+                                imageResId = this.getResources().getIdentifier(nextLine, "drawable", this.getPackageName());
+                            }
+
+                            ++j;
+                        }
+                    }
+
+                    String explanation = "";
+                    if (j < lines.length) {
+                        String noteLine = lines[j].trim().toLowerCase();
+                        if (noteLine.startsWith("note")) {
+                            explanation = lines[j].replace("note:", "").replace("note :", "").trim();
+                            ++j;
+                        }
+                    }
+
+                    if ("MCQ".equalsIgnoreCase(type)) {
+                        this.allQuestions.add(new GameQuestion(question, options, answers, imageResId, level, type, explanation));
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    private void prepareQuestionsForCurrentLevel() {
+        this.filteredQuestions.clear();
+        this.selectedQuestions.clear();
+
+        for(GameQuestion q : this.allQuestions) {
+            if (q.getLevel() != null && q.getLevel().trim().equalsIgnoreCase(this.currentLevel.trim()) && "MCQ".equalsIgnoreCase(q.getType())) {
+                this.filteredQuestions.add(q);
+            }
+        }
+
+        Collections.shuffle(this.filteredQuestions);
+        int count = Math.min(20, this.filteredQuestions.size());
+
+        for(int i = 0; i < count; ++i) {
+            this.selectedQuestions.add((GameQuestion)this.filteredQuestions.get(i));
+        }
+
+    }
+
+    private void showQuestion() {
+        if (this.selectedQuestions.isEmpty()) {
+            this.showNoQuestionsDialog();
+        } else if (this.currentQuestionIndex >= this.selectedQuestions.size()) {
+            this.finishGame();
+        } else {
+            GameQuestion q = (GameQuestion)this.selectedQuestions.get(this.currentQuestionIndex);
+            this.questionText.setText(q.getQuestion());
+            String[] options = q.getOptions();
+            this.option1.setText(options.length > 0 ? options[0] : "");
+            this.option2.setText(options.length > 1 ? options[1] : "");
+            this.option3.setText(options.length > 2 ? options[2] : "");
+            this.option4.setText(options.length > 3 ? options[3] : "");
+            if (q.getImageResId() != 0) {
+                this.questionImage.setVisibility(0);
+                this.questionImage.setImageResource(q.getImageResId());
+            } else {
+                this.questionImage.setVisibility(8);
+            }
+
+            this.option1.setVisibility(0);
+            this.option2.setVisibility(0);
+            this.option3.setVisibility(0);
+            this.option4.setVisibility(0);
+            this.startTimer();
+        }
+    }
+
+    private void startTimer() {
+        if (this.countDownTimer != null) {
+            this.countDownTimer.cancel();
+        }
+
+        if (this.timerText != null) {
+            this.timerText.setText("20");
+        }
+
+        this.countDownTimer = (new CountDownTimer(25000L, 1000L) {
+            public void onTick(long millisUntilFinished) {
+                if (GameActivity.this.timerText != null) {
+                    GameActivity.this.timerText.setText(String.valueOf(millisUntilFinished / 1000L));
+                }
+
+            }
+
+            public void onFinish() {
+                if (GameActivity.this.timerText != null) {
+                    GameActivity.this.timerText.setText("0");
+                }
+
+                ++GameActivity.this.wrongCount;
+                ++GameActivity.this.currentQuestionIndex;
+                GameActivity.this.showQuestion();
+            }
+        }).start();
+    }
+
+    private void handleAnswerClick(int selectedIndex) {
+        if (!this.selectedQuestions.isEmpty() && this.currentQuestionIndex < this.selectedQuestions.size()) {
+            if (this.countDownTimer != null) {
+                this.countDownTimer.cancel();
+            }
+
+            GameQuestion q = (GameQuestion)this.selectedQuestions.get(this.currentQuestionIndex);
+            int correctAnswer = this.getCorrectAnswerIndex(q);
+            if (selectedIndex == correctAnswer) {
+                ++this.correctCount;
+                this.showFeedbackDialog(this.getString(string.correct), true, q, correctAnswer);
+            } else {
+                ++this.wrongCount;
+                this.showFeedbackDialog(this.getWrongAnswerMessage(q, correctAnswer), false, q, correctAnswer);
+            }
+
+        }
+    }
+
+    private int getCorrectAnswerIndex(GameQuestion q) {
+        return q.getCorrectAnswers() != null && !q.getCorrectAnswers().isEmpty() ? (Integer)q.getCorrectAnswers().get(0) : 0;
+    }
+
+    private String getWrongAnswerMessage(GameQuestion q, int correctAnswerIndex) {
+        StringBuilder message = new StringBuilder();
+        message.append(this.getString(string.wrong)).append("\n\n");
+        message.append("✔ ").append(this.getString(string.correct_answer)).append(" ");
+        message.append(q.getOptions()[correctAnswerIndex]);
+        if (q.getExplanation() != null && !q.getExplanation().trim().isEmpty()) {
+            message.append("\n\n\ud83d\udca1 ").append(this.getString(string.note)).append("\n");
+            message.append(q.getExplanation());
+        }
+
+        return message.toString();
+    }
+
+    private void showFeedbackDialog(String message, boolean correct, GameQuestion q, int correctAnswerIndex) {
+        TextView msg = new TextView(this);
+        msg.setText(message);
+        msg.setTextSize(16.0F);
+        msg.setTextColor(-16777216);
+        msg.setPadding(40, 30, 40, 30);
+        msg.setTextDirection(4);
+        msg.setGravity(8388611);
+        (new AlertDialog.Builder(this, 16974394)).setTitle(correct ? this.getString(string.excellent) : this.getString(string.incorrect)).setView(msg).setCancelable(false).setPositiveButton(this.getString(string.next), (d, i) -> {
+            ++this.currentQuestionIndex;
+            this.showQuestion();
+        }).show();
+    }
+
+    private void finishGame() {
+        if (this.countDownTimer != null) {
+            this.countDownTimer.cancel();
+        }
+
+        int total = this.selectedQuestions.size();
+        int percentage = total == 0 ? 0 : (int)((double)this.correctCount * (double)100.0F / (double)total);
+        if (percentage >= 75) {
+            String finalLevel = this.getString(string.level_advanced);
+            String feedback = this.getString(string.feedback_advanced);
+        } else if (percentage >= 50) {
+            String finalLevel = this.getString(string.level_intermediate);
+            String feedback = this.getString(string.feedback_intermediate);
+        } else {
+            String finalLevel = this.getString(string.level_beginner);
+            String feedback = this.getString(string.feedback_beginner);
+        }
+
+        Intent intent = new Intent(this, ResultActivity.class);
+        intent.putExtra("assessmentLevel", this.currentLevel);
+        intent.putExtra("percentage", percentage);
+        this.startActivity(intent);
+        this.finish();
+    }
+
+    private void showNoQuestionsDialog() {
+        if (this.countDownTimer != null) {
+            this.countDownTimer.cancel();
+        }
+
+        (new AlertDialog.Builder(this)).setTitle(this.getString(string.game_finished)).setMessage(this.getString(string.no_questions_available)).setCancelable(false).setPositiveButton(this.getString(string.ok), (d, i) -> this.finish()).show();
+    }
+
+    protected void onDestroy() {
+        if (this.countDownTimer != null) {
+            this.countDownTimer.cancel();
+        }
+
+        super.onDestroy();
+    }
+}
+
+
+
+
+//GameQuestion
+
+package com.example.mygame;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class GameQuestion {
+    private String question;
+    private String[] options;
+    private List<Integer> correctAnswers;
+    private int imageResId;
+    private String level;
+    private String type;
+    private String explanation;
+
+    public GameQuestion(String question, String[] options, List<Integer> correctAnswers, int imageResId, String level, String type, String explanation) {
+        this.question = question;
+        this.options = options;
+        this.correctAnswers = correctAnswers;
+        this.imageResId = imageResId;
+        this.level = level;
+        this.type = type;
+        this.explanation = explanation;
+    }
+
+    public GameQuestion(String question, String[] options, int correctAnswer, int imageResId, String level, String type, String explanation) {
+        this.question = question;
+        this.options = options;
+        this.correctAnswers = new ArrayList();
+        this.correctAnswers.add(correctAnswer);
+        this.imageResId = imageResId;
+        this.level = level;
+        this.type = type;
+        this.explanation = explanation;
+    }
+
+    public String getQuestion() {
+        return this.question;
+    }
+
+    public String[] getOptions() {
+        return this.options;
+    }
+
+    public List<Integer> getCorrectAnswers() {
+        return this.correctAnswers;
+    }
+
+    public int getImageResId() {
+        return this.imageResId;
+    }
+
+    public String getLevel() {
+        return this.level;
+    }
+
+    public String getType() {
+        return this.type;
+    }
+
+    public String getExplanation() {
+        return this.explanation;
+    }
+}
+
+
+
+
+//LanguageActivity
+
+
+package com.example.mygame;
+
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.res.Configuration;
+import android.os.Bundle;
+import android.widget.Button;
+import androidx.appcompat.app.AppCompatActivity;
+import com.example.mygame.R.id;
+import com.example.mygame.R.layout;
+import java.util.Locale;
+
+public class LanguageActivity extends AppCompatActivity {
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        this.setContentView(layout.activity_language);
+        Button arabicBtn = (Button)this.findViewById(id.arabicBtn);
+        Button englishBtn = (Button)this.findViewById(id.englishBtn);
+        arabicBtn.setOnClickListener((v) -> this.setLanguage("ar"));
+        englishBtn.setOnClickListener((v) -> this.setLanguage("en"));
+    }
+
+    private void setLanguage(String langCode) {
+        SharedPreferences prefs = this.getSharedPreferences("Settings", 0);
+        prefs.edit().putString("lang", langCode).apply();
+        Locale locale = new Locale(langCode);
+        Locale.setDefault(locale);
+        Configuration config = new Configuration();
+        config.setLocale(locale);
+        this.getResources().updateConfiguration(config, this.getResources().getDisplayMetrics());
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.setFlags(268468224);
+        this.startActivity(intent);
+    }
+}
+
+
+
+
+//LoginActivity
+
+package com.example.mygame;
+
+import android.content.Intent;
+import android.os.Bundle;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Toast;
+import androidx.appcompat.app.AppCompatActivity;
+import com.example.mygame.R.id;
+import com.example.mygame.R.layout;
+
+public class LoginActivity extends AppCompatActivity {
+    private EditText username;
+    private EditText password;
+    private Button loginBtn;
+    private TextView createAccount;
+    private DatabaseHelper dbHelper;
+
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        this.setContentView(layout.activity_login);
+        this.username = (EditText)this.findViewById(id.username);
+        this.password = (EditText)this.findViewById(id.password);
+        this.loginBtn = (Button)this.findViewById(id.loginBtn);
+        this.createAccount = (TextView)this.findViewById(id.createAccount);
+        this.dbHelper = new DatabaseHelper(this);
+        this.loginBtn.setOnClickListener((v) -> this.loginUser());
+        this.createAccount.setOnClickListener((v) -> {
+            Intent intent = new Intent(this, RegisterActivity.class);
+            this.startActivity(intent);
+        });
+    }
+
+    private void loginUser() {
+        String user = this.username.getText().toString().trim();
+        String pass = this.password.getText().toString().trim();
+        if (user.isEmpty()) {
+            this.username.setError("Required");
+            this.username.requestFocus();
+        } else if (pass.isEmpty()) {
+            this.password.setError("Required");
+            this.password.requestFocus();
+        } else if (!user.matches("^[a-zA-Z0-9_]{3,}$")) {
+            this.username.setError("Invalid username");
+            this.username.requestFocus();
+        } else if (pass.length() < 6) {
+            this.password.setError("Password must be at least 6 characters");
+            this.password.requestFocus();
+        } else {
+            boolean validUser = this.dbHelper.loginUser(user, pass);
+            if (!validUser) {
+                Toast.makeText(this, "Invalid username or password", 0).show();
+            } else {
+                Intent intent = new Intent(this, AssessmentIntroActivity.class);
+                intent.putExtra("mode", "login");
+                intent.putExtra("username", user);
+                this.startActivity(intent);
+                this.finish();
+            }
+        }
+    }
+}
+
+
+
+
+//MainActivity
+
+
+package com.example.mygame;
+
+import android.content.Intent;
+import android.os.Bundle;
+import android.widget.Button;
+import androidx.appcompat.app.AppCompatActivity;
+import com.example.mygame.R.id;
+import com.example.mygame.R.layout;
+import com.example.mygame.R.raw;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+
+public class MainActivity extends AppCompatActivity {
+    Button startButton;
+
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        this.setContentView(layout.activity_main);
+        this.copyRawToInternal(raw.questions, "questions.txt");
+        this.copyRawToInternal(raw.questions_ar, "questions_ar.txt");
+        this.copyRawToInternal(raw.game_questions, "game_questions.txt");
+        this.copyRawToInternal(raw.game_questions_ar, "game_questions_ar.txt");
+        this.startButton = (Button)this.findViewById(id.startButton);
+        this.startButton.setOnClickListener((v) -> {
+            Intent intent = new Intent(this, SecondActivity.class);
+            this.startActivity(intent);
+        });
+    }
+
+    private void copyRawToInternal(int rawId, String fileName) {
+        try {
+            File file = new File(this.getFilesDir(), fileName);
+            if (file.exists()) {
+                return;
+            }
+
+            InputStream inputStream = this.getResources().openRawResource(rawId);
+            FileOutputStream outputStream = new FileOutputStream(file);
+            byte[] buffer = new byte[1024];
+
+            int length;
+            while((length = inputStream.read(buffer)) > 0) {
+                outputStream.write(buffer, 0, length);
+            }
+
+            inputStream.close();
+            outputStream.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+}
+
+
+
+
+//Question
+
+package com.example.mygame;
+
+public class Question {
+    private String question;
+    private String[] options;
+    private int correctAnswer;
+    private int imageResId;
+
+    public Question(String question, String[] options, int correctAnswer, int imageResId) {
+        this.question = question;
+        this.options = options;
+        this.correctAnswer = correctAnswer;
+        this.imageResId = imageResId;
+    }
+
+    public String getQuestion() {
+        return this.question;
+    }
+
+    public String[] getOptions() {
+        return this.options;
+    }
+
+    public int getCorrectAnswer() {
+        return this.correctAnswer;
+    }
+
+    public int getImageResId() {
+        return this.imageResId;
+    }
+}
+
+
+
+//RegisterActivity
+
+package com.example.mygame;
+
+import android.os.Bundle;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
+import androidx.appcompat.app.AppCompatActivity;
+import com.example.mygame.R.id;
+import com.example.mygame.R.layout;
+
+public class RegisterActivity extends AppCompatActivity {
+    EditText username;
+    EditText password;
+    EditText confirmPassword;
+    Button registerBtn;
+    DatabaseHelper dbHelper;
+
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        this.setContentView(layout.activity_register);
+        this.username = (EditText)this.findViewById(id.username);
+        this.password = (EditText)this.findViewById(id.password);
+        this.confirmPassword = (EditText)this.findViewById(id.confirmPassword);
+        this.registerBtn = (Button)this.findViewById(id.registerBtn);
+        this.dbHelper = new DatabaseHelper(this);
+        this.registerBtn.setOnClickListener((v) -> {
+            String user = this.username.getText().toString().trim();
+            String pass = this.password.getText().toString().trim();
+            String confirm = this.confirmPassword.getText().toString().trim();
+            if (!user.isEmpty() && !pass.isEmpty() && !confirm.isEmpty()) {
+                if (!user.matches("^[a-zA-Z0-9_]{3,}$")) {
+                    this.username.setError("Invalid username");
+                } else if (pass.length() < 6) {
+                    this.password.setError("Password must be at least 6 characters");
+                } else if (!pass.equals(confirm)) {
+                    this.confirmPassword.setError("Passwords do not match");
+                } else if (this.dbHelper.userExists(user)) {
+                    this.username.setError("User already exists");
+                } else {
+                    boolean success = this.dbHelper.registerUser(user, pass);
+                    if (success) {
+                        Toast.makeText(this, "Account created successfully", 0).show();
+                        this.finish();
+                    } else {
+                        Toast.makeText(this, "Error occurred", 0).show();
+                    }
+
+                }
+            } else {
+                Toast.makeText(this, "All fields required", 0).show();
+            }
+        });
+    }
+}
+
+
+
+//ResultActivity
+
+
+package com.example.mygame;
+
+import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.PorterDuff.Mode;
+import android.graphics.drawable.Drawable;
+import android.os.Bundle;
+import android.widget.Button;
+import android.widget.ProgressBar;
+import android.widget.TextView;
+import androidx.appcompat.app.AppCompatActivity;
+import com.example.mygame.R.id;
+import com.example.mygame.R.layout;
+import com.example.mygame.R.string;
+
+public class ResultActivity extends AppCompatActivity {
+    private ProgressBar resultProgress;
+    private TextView resultPercentageText;
+    private TextView resultFeedbackText;
+    private TextView tipsText;
+    private Button replayBtn;
+    private Button backBtn;
+
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        this.setContentView(layout.activity_result);
+        this.resultProgress = (ProgressBar)this.findViewById(id.resultProgress);
+        this.resultPercentageText = (TextView)this.findViewById(id.resultPercentageText);
+        this.resultFeedbackText = (TextView)this.findViewById(id.resultFeedbackText);
+        this.tipsText = (TextView)this.findViewById(id.tipsText);
+        this.replayBtn = (Button)this.findViewById(id.replayBtn);
+        this.backBtn = (Button)this.findViewById(id.backBtn);
+        String assessmentLevel = this.getIntent().getStringExtra("assessmentLevel") == null ? "BEGINNER" : this.getIntent().getStringExtra("assessmentLevel");
+        int percentage = this.getIntent().getIntExtra("percentage", 0);
+        this.resultProgress.setProgress(percentage);
+        this.resultPercentageText.setText(percentage + "%");
+        Drawable drawable = this.resultProgress.getProgressDrawable();
+        if (drawable != null) {
+            if (percentage <= 25) {
+                drawable.setColorFilter(Color.parseColor("#F44336"), Mode.SRC_IN);
+                this.resultFeedbackText.setText(this.getString(string.result_low_feedback));
+                this.tipsText.setText(this.getString(string.result_low_title) + "\n\n• " + this.getString(string.result_low_tip1) + "\n• " + this.getString(string.result_low_tip2) + "\n• " + this.getString(string.result_low_tip3) + "\n• " + this.getString(string.result_low_tip4) + "\n• " + this.getString(string.result_low_tip5));
+            } else if (percentage <= 50) {
+                drawable.setColorFilter(Color.parseColor("#FF9800"), Mode.SRC_IN);
+                this.resultFeedbackText.setText(this.getString(string.result_medium_feedback));
+                this.tipsText.setText(this.getString(string.result_medium_title) + "\n\n• " + this.getString(string.result_medium_tip1) + "\n• " + this.getString(string.result_medium_tip2) + "\n• " + this.getString(string.result_medium_tip3) + "\n• " + this.getString(string.result_medium_tip4) + "\n• " + this.getString(string.result_medium_tip5));
+            } else if (percentage <= 75) {
+                drawable.setColorFilter(Color.parseColor("#FFC107"), Mode.SRC_IN);
+                this.resultFeedbackText.setText(this.getString(string.result_good_feedback));
+                this.tipsText.setText(this.getString(string.result_good_title) + "\n\n• " + this.getString(string.result_good_tip1) + "\n• " + this.getString(string.result_good_tip2) + "\n• " + this.getString(string.result_good_tip3) + "\n• " + this.getString(string.result_good_tip4) + "\n• " + this.getString(string.result_good_tip5));
+            } else {
+                drawable.setColorFilter(Color.parseColor("#4CAF50"), Mode.SRC_IN);
+                this.resultFeedbackText.setText(this.getString(string.result_excellent_feedback));
+                this.tipsText.setText(this.getString(string.result_excellent_title) + "\n\n• " + this.getString(string.result_excellent_tip1) + "\n• " + this.getString(string.result_excellent_tip2) + "\n• " + this.getString(string.result_excellent_tip3) + "\n• " + this.getString(string.result_excellent_tip4) + "\n• " + this.getString(string.result_excellent_tip5));
+            }
+        }
+
+        this.replayBtn.setOnClickListener((v) -> {
+            Intent intent = new Intent(this, GameActivity.class);
+            intent.putExtra("level", assessmentLevel);
+            this.startActivity(intent);
+            this.finish();
+        });
+        this.backBtn.setOnClickListener((v) -> this.finish());
+    }
+}
+
+
+
+//SecondActivity
+
+package com.example.mygame;
+
+import android.content.Intent;
+import android.os.Bundle;
+import android.widget.Button;
+import androidx.appcompat.app.AppCompatActivity;
+import com.example.mygame.R.id;
+import com.example.mygame.R.layout;
+
+public class SecondActivity extends AppCompatActivity {
+    Button loginButton;
+    Button guestButton;
+    Button adminButton;
+
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        this.setContentView(layout.activity_second);
+        this.loginButton = (Button)this.findViewById(id.loginButton);
+        this.guestButton = (Button)this.findViewById(id.guestButton);
+        this.adminButton = (Button)this.findViewById(id.adminButton);
+        this.loginButton.setOnClickListener((v) -> {
+            Intent intent = new Intent(this, LoginActivity.class);
+            this.startActivity(intent);
+        });
+        this.guestButton.setOnClickListener((v) -> {
+            Intent intent = new Intent(this, AssessmentIntroActivity.class);
+            intent.putExtra("mode", "guest");
+            this.startActivity(intent);
+        });
+        this.adminButton.setOnClickListener((v) -> {
+            Intent intent = new Intent(this, AdminLoginActivity.class);
+            this.startActivity(intent);
+        });
+    }
+}
+
